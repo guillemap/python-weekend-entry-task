@@ -2,15 +2,36 @@
 
 Script that fulfills all official readme requirements. In addition it includes some extra filters which are popular on flight search websites like Skyscanner.
 
-To run the script simply run the command
+As expected it will print the result in the terminal itself as a formatted json. A file can be stored in the same directory as the script, using as well an extra optional argument.
+
+#### Usage
+
+To run the script simply run the command:
 
 ```
 python -m solution example/example0.csv RFZ WIW
 ```
 
-As expected it will print the result in the terminal itself as a formatted json. A file can be stored in the same directory as the script, using as well an extra optional argument.
+Will output all flight combinations from RFZ to WIW, sorted from lowest to highest price.
+
+A more sophisticated example:
 
 ```
+python -m solution example/example3.csv WUE JBN --bags=1 --return --max-layover-time=8 --stops=2 --outbound-range=18:00:00-23:59:59 --trip-duration=12 --file
+```
+
+Will output all flight combinations from WUE to JBN, plus going back to WUE which allow 1 bag, a maximum layover time between flights WUE to JBN or JBN to WUE of 8 hours, a maximum of two stops in any trip, flying out from WUE between 18:00-23:59 of any day and a maximum trip duration of 12 hours (including layover time). Will also save the results in a file "results.json"
+
+Detailed usage info can be shown using `python -m solution --help`
+
+```
+usage: solution.py [-h] [-b BAGS] [-R] [-l MIN_LAYOVER_TIME] [-L MAX_LAYOVER_TIME]
+                   [-d DEPART_DAY] [-r RETURN_DAY] [-s STOPS] [-or OUTBOUND_RANGE]
+                   [-rr RETURN_RANGE] [-t TRIP_DURATION] [-f]
+                   csv_file_path origin destination
+
+Python weekend entry task
+
 positional arguments:
   csv_file_path         Relative path of the csv dataset file
   origin                Airport A
@@ -18,8 +39,7 @@ positional arguments:
 
 options:
   -h, --help            show this help message and exit
-  -b BAGS, --bags BAGS  Number of bags. If not specified, it is assumed that the user has no
-                        bags.
+  -b BAGS, --bags BAGS  Number of bags. If not specified, it is assumed that the user has no bags.
   -R, --return          If the user returns back to origin.
   -l MIN_LAYOVER_TIME, --min-layover-time MIN_LAYOVER_TIME
                         Minimum layover hours accepted.
@@ -28,27 +48,24 @@ options:
   -d DEPART_DAY, --depart-day DEPART_DAY
                         Day to start flyign to destination in format YYYY-MM-DD.
   -r RETURN_DAY, --return-day RETURN_DAY
-                        Day to start flyign back to origin in format YYYY-MM-DD, if there is a
-                        return trip.
+                        Day to start flyign back to origin in format YYYY-MM-DD, if there is a return trip.
   -s STOPS, --stops STOPS
                         Maximum number of stops.
   -or OUTBOUND_RANGE, --outbound-range OUTBOUND_RANGE
-                        Time range of accepted outbound departure flight times in format
-                        HH:MM:SS-HH:MM:SS.
+                        Time range of accepted outbound departure flight times in format HH:MM:SS-HH:MM:SS.
   -rr RETURN_RANGE, --return-range RETURN_RANGE
-                        Time range of accepted return departure flight times in format HH:MM:SS-
-                        HH:MM:SS.
+                        Time range of accepted return departure flight times in format HH:MM:SS-HH:MM:SS.
   -t TRIP_DURATION, --trip-duration TRIP_DURATION
-                        Maximum trip duration in hours (A -> B). For round trips it is the
-                        maximum time of any of both trips, using Skyscanner's standard.
+                        Maximum trip duration in hours (A -> B). For round trips it is the maximum time of any of both trips, using Skyscanner's standard.
   -f, --file            Save results to file results.json.
+  -n, --not-print       Avoid printing the combinations found
 ```
 
-#### Assumptions:
+#### Error handling:
 
-1. bags_allowed is an integer
-2. departure/arrival are in the format of YYYY-MM-DDTHH:MM:SS
-3. travel_time for round trips is the maximum time of both trips, using SkyScanner's standard
+Bad data is handled using the logging library.
+Any argument or csv data error that makes the code unable to continue prints the error and exits script execution.
+In case of a specific bad flight row in the csv, it just ignored the flight and continues with other data.
 
 ---
 
