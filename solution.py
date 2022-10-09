@@ -101,7 +101,7 @@ def recursive_search(data, origin, destination, flights_used) -> None:
                     'origin': args.origin,
                     'total_price': sum([flight['base_price'] + flight['bag_price'] * args.bags for flight in flights_used]),
                     'travel_time': str(travel_time),
-                    })
+                })
             else:
                 next_minimum_accepted_departure = (datetime.strptime(flight['arrival'], '%Y-%m-%dT%H:%M:%S') + timedelta(hours=args.min_layover_time)).strftime('%Y-%m-%dT%H:%M:%S')
                 next_maximum_accepted_departure = (datetime.strptime(flight['arrival'], '%Y-%m-%dT%H:%M:%S') + timedelta(hours=args.max_layover_time)).strftime('%Y-%m-%dT%H:%M:%S')
@@ -128,17 +128,15 @@ def build_round_trip_combinations(combinations_0, combinations_1) -> list:
             combination_0_arrival = datetime.strptime(combination_0['flights'][-1]['arrival'], '%Y-%m-%dT%H:%M:%S')
             combination_1_departure = datetime.strptime(combination_1['flights'][0]['departure'], '%Y-%m-%dT%H:%M:%S')
             if combination_1_departure >= combination_0_arrival + timedelta(hours=args.min_layover_time):
-                combinations.append(
-                    {
-                        "flights": combination_0["flights"] + combination_1["flights"],
-                        "bags_allowed": min([combination_0["bags_allowed"], combination_1["bags_allowed"],]),
-                        "bags_count": args.bags,
-                        "destination": args.destination,
-                        "origin": args.origin,
-                        "total_price": combination_0["total_price"] + combination_1["total_price"],
-                        "travel_time": str(max(timedelta_parse(combination_0["travel_time"]), timedelta_parse(combination_1["travel_time"]),)),
-                    }
-                )
+                combinations.append({
+                    "flights": combination_0["flights"] + combination_1["flights"],
+                    "bags_allowed": min([combination_0["bags_allowed"], combination_1["bags_allowed"],]),
+                    "bags_count": args.bags,
+                    "destination": args.destination,
+                    "origin": args.origin,
+                    "total_price": combination_0["total_price"] + combination_1["total_price"],
+                    "travel_time": str(max(timedelta_parse(combination_0["travel_time"]), timedelta_parse(combination_1["travel_time"]),)),
+                })
     return sorted(combinations, key=lambda k: k['total_price'])
 
 
