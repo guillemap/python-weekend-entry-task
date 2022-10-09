@@ -31,8 +31,7 @@ args = parser.parse_args()
 
 
 def main():
-    check_input_arguments()
-    parse_ranges()
+    """ Main function. Read the csv file, find the flights and print and/or store the results """
     raw_data = read_csv_file(args.csv_file_path)
     if not args.round:
         results = find_flights(raw_data, args.origin, args.destination)
@@ -150,8 +149,8 @@ def build_round_trip_combinations(combinations_0, combinations_1) -> list:
 
 def parse_ranges() -> None:
     """ Parse the ranges of dates and times """
-
     global outbound_range
+    global return_range
     outbound_range = [None, None]
     if args.depart_day is not None:
         outbound_range = [args.depart_day + 'T00:00:00', args.depart_day + 'T23:59:59']
@@ -159,8 +158,6 @@ def parse_ranges() -> None:
             outbound_range = [args.depart_day + 'T' + args.outbound_range.split('-')[0], args.depart_day + 'T' + args.outbound_range.split('-')[1]]
     elif args.outbound_range is not None:
         outbound_range = [args.outbound_range.split('-')[0], args.outbound_range.split('-')[1]]
-
-    global return_range
     return_range = [None, None]
     if args.return_day is not None:
         return_range = [args.return_day + 'T00:00:00', args.return_day + 'T23:59:59']
@@ -191,7 +188,7 @@ def timedelta_parse(string) -> timedelta:
     return timedelta(hours=int(h), minutes=int(m), seconds=int(s))
 
 
-def check_input_arguments():
+def check_input_arguments() -> None:
     """ Check if the input arguments are valid """
     if args.bags is not None and args.bags < 0:
         logging.error('--bags must be a positive integer')
@@ -222,7 +219,7 @@ def check_input_arguments():
         exit(1)
 
 
-def flight_is_valid(flight):
+def flight_is_valid(flight) -> bool:
     """ Check if a flight is valid """
     if flight['origin'] == flight['destination']:
         logging.info('Flight {} departing at {} is invalid because origin and destination are the same'.format(flight['flight_no'], flight['departure']))
@@ -264,12 +261,6 @@ def flight_is_valid(flight):
 
 
 if __name__ == '__main__':
+    check_input_arguments()
+    parse_ranges()
     main()
-
-
-# error handling:
-# - check all positional arguments are present and valid
-# - check all optional arguments are valid
-# - check csv file is valid
-
-# - test ranges
