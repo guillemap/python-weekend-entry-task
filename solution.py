@@ -22,6 +22,7 @@ def main():
     if args.file:
         with open("results.json", "w") as f:
             json.dump(results, f, indent=4, sort_keys=True)
+    print(len(results))
 
 
 def find_flights(data, origin, destination, is_return=False) -> list:
@@ -29,7 +30,7 @@ def find_flights(data, origin, destination, is_return=False) -> list:
     global combinations
     combinations = []
     filtered_data = clean_bad_flights(
-        json.loads(json.dumps(data)),
+        data,
         bags=args.bags,
         airport_A=destination,
         airport_B=origin,
@@ -51,13 +52,14 @@ def clean_bad_flights(
     check_range=False,
 ) -> list:
     """
-    Remove flights that fulfill any of the following conditions:
+    Remove flights in data that fulfill any of the following conditions:
     a) allow less bags than the user has
     b) include the airport_A as origin or airport_B as destination
     c) have a departure time before the minimum accepted departure time
     d) have a departure time after the maximum accepted departure time
     e) we are checking an outbound/return range and the first flight is not in that range
     """
+    new_data = json.loads(json.dumps(data))
     for flight in json.loads(json.dumps(data)):
         if (
             (bags is not None and flight["bags_allowed"] < str(bags))
@@ -100,8 +102,8 @@ def clean_bad_flights(
                 )
             )
         ):
-            data.remove(flight)
-    return data
+            new_data.remove(flight)
+    return new_data
 
 
 def recursive_search(data, origin, destination, flights_used) -> None:
@@ -159,7 +161,7 @@ def recursive_search(data, origin, destination, flights_used) -> None:
                 ).isoformat()
                 recursive_search(
                     clean_bad_flights(
-                        json.loads(json.dumps(data)),
+                        data,
                         airport_A=flight["origin"],
                         airport_B=flight["origin"],
                         departure_min=next_minimum_accepted_departure,
