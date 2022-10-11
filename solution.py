@@ -22,7 +22,6 @@ def main():
     if args.file:
         with open("results.json", "w") as f:
             json.dump(results, f, indent=4, sort_keys=True)
-    print(len(results))
 
 
 def find_flights(data, origin, destination, is_return=False) -> list:
