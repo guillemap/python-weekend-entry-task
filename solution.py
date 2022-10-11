@@ -21,87 +21,72 @@ def main():
         print(json.dumps(results, indent=4))
     if args.file:
         with open("results.json", "w") as f:
-            json.dump(results, f, indent=4, sort_keys=True)
+            json.dump(results, f, indent=4)
 
 
 def find_flights(data, origin, destination, is_return=False) -> list:
     """Find all possible combinations of flights in data from origin to destination"""
     global combinations
     combinations = []
-    filtered_data = clean_bad_flights(
-        data,
-        bags=args.bags,
-        airport_A=destination,
-        airport_B=origin,
-        departure_min=return_range[0] if is_return else outbound_range[0],
-        departure_max=return_range[1] if is_return else outbound_range[1],
-        check_range=True,
+    filtered_data = clean_flights_from(data, destination)
+    filtered_data = clean_flights_to(filtered_data, origin)
+    timestamp_range = outbound_range if not is_return else return_range
+    filtered_data = clean_flights_from_airport_departing_outside_range(
+        filtered_data, origin, timestamp_range[0], timestamp_range[1]
     )
     recursive_search(filtered_data, origin, destination, [])
     return sorted(combinations, key=lambda k: k["total_price"])
 
 
-def clean_bad_flights(
-    data,
-    bags=None,
-    airport_A=None,
-    airport_B=None,
-    departure_min=None,
-    departure_max=None,
-    check_range=False,
-) -> list:
-    """
-    Remove flights in data that fulfill any of the following conditions:
-    a) allow less bags than the user has
-    b) include the airport_A as origin or airport_B as destination
-    c) have a departure time before the minimum accepted departure time
-    d) have a departure time after the maximum accepted departure time
-    e) we are checking an outbound/return range and the first flight is not in that range
-    """
+def clean_flights_from(data, airport):
+    """Remove all flights from data that depart from airport"""
+    return [flight for flight in data if flight["origin"] != airport]
+
+
+def clean_flights_to(data, airport):
+    """Remove all flights from data that arrive to airport"""
+    return [flight for flight in data if flight["destination"] != airport]
+
+
+def clean_flights_departing_before(data, departure_before):
+    """Remove all flights from data that depart before departure_before"""
+    return [flight for flight in data if flight["departure"] >= departure_before]
+
+
+def clean_flights_from_airport_departing_outside_range(
+    data, airport, departure_before, departure_after
+):
+    """Remove all flights from data that depart from airport and that depart before departure_before or after departure_after"""
     new_data = json.loads(json.dumps(data))
-    for flight in json.loads(json.dumps(data)):
-        if (
-            (bags is not None and flight["bags_allowed"] < str(bags))
-            or (airport_A is not None and airport_A == flight["origin"])
-            or (airport_B is not None and airport_B == flight["destination"])
-            or (
-                not check_range
-                and (
-                    (departure_min is not None and flight["departure"] < departure_min)
-                    or (
-                        departure_max is not None
-                        and flight["departure"] > departure_max
-                    )
-                )
-            )
-            or (
-                check_range
-                and airport_B == flight["origin"]
+    for flight in data:
+        if flight["origin"] == airport:
+            deapart_hh_mm_ss = flight["departure"].split("T")[1]
+            if (
+                departure_before is not None
                 and (
                     (
-                        departure_min is not None
-                        and is_full_timestamp(departure_min)
-                        and flight["departure"] < departure_min
+                        is_full_timestamp(departure_before)
+                        and flight["departure"] < departure_before
                     )
                     or (
-                        departure_min is not None
-                        and not is_full_timestamp(departure_min)
-                        and flight["departure"].split("T")[1] < departure_min
-                    )
-                    or (
-                        departure_max is not None
-                        and is_full_timestamp(departure_max)
-                        and flight["departure"] > departure_max
-                    )
-                    or (
-                        departure_max is not None
-                        and not is_full_timestamp(departure_max)
-                        and flight["departure"].split("T")[1] > departure_max
+                        not is_full_timestamp(departure_before)
+                        and deapart_hh_mm_ss < departure_before
                     )
                 )
-            )
-        ):
-            new_data.remove(flight)
+            ) or (
+                departure_after is not None
+                and (
+                    (
+                        is_full_timestamp(departure_after)
+                        and flight["departure"] > departure_after
+                    )
+                    or (
+                        not is_full_timestamp(departure_after)
+                        and deapart_hh_mm_ss > departure_after
+                    )
+                )
+            ):
+                new_data.remove(flight)
     return new_data
 
 
@@ -158,14 +143,19 @@ def recursive_search(data, origin, destination, flights_used) -> None:
                     datetime.fromisoformat(flight["arrival"])
                     + timedelta(hours=args.max_layover_time)
                 ).isoformat()
+                temp_data = clean_flights_from(data, flight["origin"])
+                temp_data = clean_flights_to(temp_data, flight["destination"])
+                temp_data = clean_flights_departing_before(
+                    temp_data, next_minimum_accepted_departure
+                )
+                temp_data = clean_flights_from_airport_departing_outside_range(
+                    temp_data,
+                    flight["destination"],
+                    next_minimum_accepted_departure,
+                    next_maximum_accepted_departure,
+                )
                 recursive_search(
-                    clean_bad_flights(
-                        data,
-                        airport_A=flight["origin"],
-                        airport_B=flight["origin"],
-                        departure_min=next_minimum_accepted_departure,
-                        departure_max=next_maximum_accepted_departure,
-                    ),
+                    temp_data,
                     flight["destination"],
                     destination,
                     json.loads(json.dumps(flights_used)),
