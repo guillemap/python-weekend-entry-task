@@ -193,3 +193,76 @@ def flight_is_valid(flight) -> bool:
         )
         return False
     return True
+
+
+############################################
+# Debugging
+############################################
+
+
+def flight_to_str(flight, fail_reason=[]) -> None:
+    """flight in a human-readable format"""
+    return "Flight No.: {} - {} -> {} - Departure: {} - Arrival: {} - Base Price: {} - Bag Price: {} - Bags Allowed: {}".format(
+        (colors.FAIL if "flight_no" in fail_reason else "")
+        + flight["flight_no"]
+        + colors.ENDC,
+        (colors.FAIL if "origin" in fail_reason else "")
+        + flight["origin"]
+        + colors.ENDC,
+        (colors.FAIL if "destination" in fail_reason else "")
+        + flight["destination"]
+        + colors.ENDC,
+        (colors.FAIL if "departure" in fail_reason else "")
+        + flight["departure"]
+        + colors.ENDC,
+        (colors.FAIL if "arrival" in fail_reason else "")
+        + flight["arrival"]
+        + colors.ENDC,
+        (colors.FAIL if "base_price" in fail_reason else "")
+        + str(flight["base_price"])
+        + colors.ENDC,
+        (colors.FAIL if "bag_price" in fail_reason else "")
+        + str(flight["bag_price"])
+        + colors.ENDC,
+        (colors.FAIL if "bags_allowed" in fail_reason else "")
+        + str(flight["bags_allowed"])
+        + colors.ENDC,
+    )
+
+
+def print_data_csv(data) -> None:
+    """Print the data in a csv format"""
+    for flight in data:
+        print(
+            "{},{},{},{},{},{},{},{}".format(
+                flight["flight_no"],
+                flight["origin"],
+                flight["destination"],
+                flight["departure"],
+                flight["arrival"],
+                flight["base_price"],
+                flight["bag_price"],
+                flight["bags_allowed"],
+            )
+        )
+
+
+def print_combination_found(combination) -> None:
+    """Print a combination of flights in a human-readable format"""
+    print("Combination found:")
+    for flight in combination["flights"]:
+        print(flight_to_str(flight))
+    print("")
+
+
+class colors:
+    """Colors for the terminal"""
+
+    HEADER = "\033[95m"
+    OKBLUE = "\033[94m"
+    OKGREEN = "\033[92m"
+    WARNING = "\033[93m"
+    FAIL = "\033[91m"
+    ENDC = "\033[0m"
+    BOLD = "\033[1m"
+    UNDERLINE = "\033[4m"
