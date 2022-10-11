@@ -70,6 +70,11 @@ def timedelta_parse(string) -> timedelta:
     return timedelta(hours=int(h), minutes=int(m), seconds=int(s))
 
 
+def is_full_timestamp(timestamp) -> bool:
+    """Check if a timestamp is in full format (YYYY-MM-DDTHH:MM:SS)"""
+    return re.match(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$", timestamp)
+
+
 def check_input_arguments(args) -> None:
     """Check if the input arguments are valid"""
     if args.bags is not None and args.bags < 0:

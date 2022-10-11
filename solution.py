@@ -80,22 +80,22 @@ def clean_bad_flights(
                 and (
                     (
                         departure_min is not None
-                        and len(departure_min) > 8
+                        and is_full_timestamp(departure_min)
                         and flight["departure"] < departure_min
                     )
                     or (
                         departure_min is not None
-                        and len(departure_min) == 8
+                        and not is_full_timestamp(departure_min)
                         and flight["departure"][-8:] < departure_min
                     )
                     or (
                         departure_max is not None
-                        and len(departure_max) > 8
+                        and is_full_timestamp(departure_max)
                         and flight["departure"] > departure_max
                     )
                     or (
                         departure_max is not None
-                        and len(departure_max) == 8
+                        and not is_full_timestamp(departure_max)
                         and flight["departure"][-8:] > departure_max
                     )
                 )
