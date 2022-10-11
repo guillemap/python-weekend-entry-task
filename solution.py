@@ -1,7 +1,6 @@
 import argparse
 import json
 import logging
-from pprint import pprint
 from datetime import datetime, timedelta
 from helpers import *
 
@@ -19,7 +18,7 @@ def main():
             find_flights(raw_data, args.destination, args.origin, True),
         )
     if not args.not_print:
-        pprint(results)
+        print(json.dumps(results, indent=4))
     if args.file:
         with open("results.json", "w") as f:
             json.dump(results, f, indent=4, sort_keys=True)
