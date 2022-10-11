@@ -85,7 +85,7 @@ def clean_bad_flights(
                     or (
                         departure_min is not None
                         and not is_full_timestamp(departure_min)
-                        and flight["departure"][-8:] < departure_min
+                        and flight["departure"].split("T")[1] < departure_min
                     )
                     or (
                         departure_max is not None
@@ -95,7 +95,7 @@ def clean_bad_flights(
                     or (
                         departure_max is not None
                         and not is_full_timestamp(departure_max)
-                        and flight["departure"][-8:] > departure_max
+                        and flight["departure"].split("T")[1] > departure_max
                     )
                 )
             )
@@ -113,9 +113,9 @@ def recursive_search(data, origin, destination, flights_used) -> None:
             flight["bag_price"] = float(flight["bag_price"])
             flight["bags_allowed"] = int(flight["bags_allowed"])
             flights_used.append(flight)
-            travel_time = datetime.strptime(
-                flight["arrival"], "%Y-%m-%dT%H:%M:%S"
-            ) - datetime.strptime(flights_used[0]["departure"], "%Y-%m-%dT%H:%M:%S")
+            travel_time = datetime.fromisoformat(
+                flight["arrival"]
+            ) - datetime.fromisoformat(flights_used[0]["departure"])
             if (
                 flight["destination"] == destination
                 and (
@@ -150,13 +150,13 @@ def recursive_search(data, origin, destination, flights_used) -> None:
                 )
             else:
                 next_minimum_accepted_departure = (
-                    datetime.strptime(flight["arrival"], "%Y-%m-%dT%H:%M:%S")
+                    datetime.fromisoformat(flight["arrival"])
                     + timedelta(hours=args.min_layover_time)
-                ).strftime("%Y-%m-%dT%H:%M:%S")
+                ).isoformat()
                 next_maximum_accepted_departure = (
-                    datetime.strptime(flight["arrival"], "%Y-%m-%dT%H:%M:%S")
+                    datetime.fromisoformat(flight["arrival"])
                     + timedelta(hours=args.max_layover_time)
-                ).strftime("%Y-%m-%dT%H:%M:%S")
+                ).isoformat()
                 recursive_search(
                     clean_bad_flights(
                         json.loads(json.dumps(data)),
@@ -177,11 +177,11 @@ def build_round_trip_combinations(combinations_0, combinations_1) -> list:
     combinations = []
     for combination_0 in combinations_0:
         for combination_1 in combinations_1:
-            combination_0_arrival = datetime.strptime(
-                combination_0["flights"][-1]["arrival"], "%Y-%m-%dT%H:%M:%S"
+            combination_0_arrival = datetime.fromisoformat(
+                combination_0["flights"][-1]["arrival"]
             )
-            combination_1_departure = datetime.strptime(
-                combination_1["flights"][0]["departure"], "%Y-%m-%dT%H:%M:%S"
+            combination_1_departure = datetime.fromisoformat(
+                combination_1["flights"][0]["departure"]
             )
             if combination_1_departure >= combination_0_arrival + timedelta(
                 hours=args.min_layover_time
